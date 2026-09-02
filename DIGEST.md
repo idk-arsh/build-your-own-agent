@@ -33,5 +33,6 @@ core stays dependency-free, which is the point of the project.
 2. The pre-commit hook originally called `ruff` from `PATH`, which fails when the
    tooling lives in a venv. Rewritten to prefer `.venv`. Verified it blocks a red
    commit (exit 1, nothing landed).
-3. CI has never run — the repo was created minutes ago. The workflow is unproven
-   until the first push completes.
+3. CI is now verified green: 10/10 jobs (lint+types, plus tests on
+   ubuntu/macos/windows x py3.10/3.12/3.13). No secret required, so a fork's pull
+   request gets real CI feedback.
