@@ -1,0 +1,17 @@
+#!/bin/sh
+# Quality gate. No red commit reaches main.
+[ "$SKIP_GATE" = "1" ] && { echo "pre-commit: GATE BYPASSED"; exit 0; }
+fail() { echo ""; echo "pre-commit: BLOCKED — $1"; echo "  Fix it or revert. Do not bypass to 'make progress'."; exit 1; }
+
+if [ -f backend/pyproject.toml ]; then
+  ( cd backend && ruff check . || exit 1 ) || fail "backend lint"
+  ( cd backend && mypy --strict . || exit 1 ) || fail "backend types"
+  ( cd backend && python -m pytest -q || exit 1 ) || fail "backend tests"
+elif [ -f pyproject.toml ]; then
+  ruff check . || fail "lint"
+  ruff format --check . || fail "formatting drift"
+  python -m pytest -q || fail "tests"
+else
+  echo "pre-commit: no package yet, gate idle"; exit 0
+fi
+echo "pre-commit: gate passed"
