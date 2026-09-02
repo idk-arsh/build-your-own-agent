@@ -9,11 +9,17 @@ CI executes it against the mock transport, and the cost note is accurate.
 ---
 
 ### BYOA-001 — Repo skeleton and mock transport
-**M0 · M · todo**
-- [ ] `pyproject.toml`, ruff + mypy config, Python 3.10+
-- [ ] `tests/mock_transport.py`: a deterministic fake LLM that replays scripted responses including tool-use blocks
-- [ ] CI runs every `chapters/*.py` against the mock and asserts expected output
-- [ ] `make run CH=01` convenience target documented in README
+**M0 · M · done**
+- [x] `pyproject.toml`, ruff + mypy config, Python 3.10+
+- [x] `tests/mock_transport.py`: a deterministic fake LLM that replays scripted responses including tool-use blocks
+- [x] CI runs every `chapters/*.py` against the mock and asserts expected output
+- [x] `make run CH=01` convenience target documented in README
+
+Notes: the mock is an HTTP server speaking the Messages API, not a library, so
+chapters stay standalone and still run offline via `ANTHROPIC_BASE_URL`. mypy is
+configured with `files = ["."]` so `chapters/` is type-checked automatically as
+soon as the first chapter lands. The chapter-runner harness is self-tested but has
+not yet executed a real chapter — that happens in BYOA-002.
 
 ### BYOA-002 — Chapter 1: the loop
 **M1 · M · todo** — deps: BYOA-001

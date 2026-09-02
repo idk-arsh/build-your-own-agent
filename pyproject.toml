@@ -1,0 +1,31 @@
+[project]
+name = "build-your-own-agent"
+version = "0.0.0"
+description = "Build a production-capable AI agent from scratch in 12 chapters. No frameworks."
+requires-python = ">=3.10"
+# Chapters intentionally depend on nothing. The whole point is that you can read
+# every line that runs. Dev tooling only.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["ruff>=0.6", "mypy>=1.11", "pytest>=8.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+# "." rather than an explicit list, so chapters/ is covered the moment the first
+# chapter lands. An explicit list is a step someone forgets.
+files = ["."]
+exclude = '^\.venv/'
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"

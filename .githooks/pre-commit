@@ -3,15 +3,20 @@
 [ "$SKIP_GATE" = "1" ] && { echo "pre-commit: GATE BYPASSED"; exit 0; }
 fail() { echo ""; echo "pre-commit: BLOCKED — $1"; echo "  Fix it or revert. Do not bypass to 'make progress'."; exit 1; }
 
-if [ -f backend/pyproject.toml ]; then
-  ( cd backend && ruff check . || exit 1 ) || fail "backend lint"
-  ( cd backend && mypy --strict . || exit 1 ) || fail "backend types"
-  ( cd backend && python -m pytest -q || exit 1 ) || fail "backend tests"
-elif [ -f pyproject.toml ]; then
-  ruff check . || fail "lint"
-  ruff format --check . || fail "formatting drift"
-  python -m pytest -q || fail "tests"
-else
-  echo "pre-commit: no package yet, gate idle"; exit 0
+# Prefer the project venv, so the gate uses pinned tooling rather than whatever
+# happens to be on PATH.
+if   [ -x .venv/Scripts/python.exe ]; then PY=.venv/Scripts/python.exe
+elif [ -x .venv/bin/python ];        then PY=.venv/bin/python
+else PY=python
 fi
+
+[ -f pyproject.toml ] || { echo "pre-commit: no pyproject.toml yet, gate idle"; exit 0; }
+
+$PY -c "import ruff" >/dev/null 2>&1 || $PY -m ruff --version >/dev/null 2>&1 \
+  || fail "ruff not installed — run: make install"
+
+echo "pre-commit: ruff check";        $PY -m ruff check .        || fail "lint errors"
+echo "pre-commit: ruff format";       $PY -m ruff format --check . || fail "formatting drift — run 'ruff format .'"
+echo "pre-commit: mypy --strict";     $PY -m mypy               || fail "type errors"
+echo "pre-commit: pytest";            $PY -m pytest -q          || fail "tests failing"
 echo "pre-commit: gate passed"
