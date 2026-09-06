@@ -68,7 +68,7 @@ scripted run exercises all three failures; the nonzero-exit, refusal and
 unknown-tool paths were verified by hand, not in CI.
 
 ### BYOA-005 — Chapter 4: loop control and cost
-**M1 · M · todo** — deps: BYOA-004
+**M1 · M · wip** — deps: BYOA-004
 - [ ] Turn cap, USD cap, cycle detection on repeated tool+args
 - [ ] Prose: why agents loop, with a real transcript of one doing it
 - [ ] Exercise: trigger the cycle detector deliberately
