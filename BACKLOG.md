@@ -68,10 +68,23 @@ scripted run exercises all three failures; the nonzero-exit, refusal and
 unknown-tool paths were verified by hand, not in CI.
 
 ### BYOA-005 — Chapter 4: loop control and cost
-**M1 · M · wip** — deps: BYOA-004
-- [ ] Turn cap, USD cap, cycle detection on repeated tool+args
-- [ ] Prose: why agents loop, with a real transcript of one doing it
-- [ ] Exercise: trigger the cycle detector deliberately
+**M1 · M · done** — deps: BYOA-004
+- [x] Turn cap, USD cap, cycle detection on repeated tool+args
+- [x] Prose: why agents loop, with a real transcript of one doing it
+- [x] Exercise: trigger the cycle detector deliberately
+
+Notes: 185 lines, stdlib only, chapter 3's two file tools (`run_python` left out
+for length). The dollar cap is computed from each reply's `usage` and two price
+constants, checked after every reply and before any tool runs. The cycle detector
+keys a `Counter` on tool name plus `json.dumps(input, sort_keys=True)`; the first
+repeat is answered with an `is_error` nudge instead of re-running the tool, the
+second repeat ends the run. The mock gained an optional `usage` override on both
+response builders (tested in `test_mock_transport.py`) so a scripted reply can
+look expensive, and the harness now accepts a list of named scenarios per
+chapter; chapter 4 has four (finishes, cycle, usd_cap, turn_cap). All four
+transcripts in the prose are real mock runs. Also fixed while here: the mock's
+unknown-path branch answered before reading the request body, which produced the
+intermittent `ConnectionAbortedError` noted in the BYOA-002 digest.
 
 ### BYOA-006 — Chapter 5: memory
 **M2 · M · todo** — deps: BYOA-005

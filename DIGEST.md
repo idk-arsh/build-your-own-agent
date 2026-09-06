@@ -4,6 +4,51 @@ Newest first. Format in `CLAUDE.md`. The `Watch out` line must be honest.
 
 ---
 
+## 2026-09-06 — BYOA-005 Chapter 4: loop control and cost
+**Landed:** `chapters/04_loop_control.py` stops for three reasons the model does
+not control: a turn cap, a dollar cap computed from `usage` and the list price,
+and a cycle detector that nudges the model on the first identical tool call and
+ends the run on the second. CI runs four scripted scenarios covering the normal
+finish and all three exits.
+
+**How:** `while True` became `for turn in range(1, MAX_TURNS + 1)`. `cost_usd()`
+prices each reply from its own `usage`; the check runs after every reply and
+before any tool, so a turn we will not send does no work. The detector is a
+`Counter` keyed on tool name plus sorted-key JSON of the input; the first repeat
+gets an `is_error` result saying the answer has not changed (chapter 3's lesson
+applied to the loop itself), the second ends the run. The prose leads with why
+agents loop (the model does not remember trying and never sees the bill), then
+walks the three exits, then shows a real repeat transcript and a real dollar-cap
+transcript. Worst-case cost arithmetic in the prose is checked by hand: 500
+tokens per turn over 20 turns is 105,000 input tokens, about 60 cents, and the
+50 cent default cap fires around turn 19.
+Test infrastructure: the mock's response builders take an optional `usage`
+(two tests added), and an expectation file may be a list of named scenarios
+(each is its own pytest id). The mock's unknown-path branch now reads the request
+body before answering; that unread body was the intermittent
+`ConnectionAbortedError` on Windows. 15 of 15 repeated runs pass after the fix.
+
+**Cost:** 3 files added, 6 edited (mock, mock tests, harness, README table,
+backlog, digest), 6 tests added (4 scenarios, 2 mock tests), 2 commits on
+`auto/BYOA-005-loop-control`, branched from `auto/BYOA-004-errors`. Not merged.
+
+**Next:** BYOA-006 — Chapter 5: memory.
+
+**Watch out:** Four things.
+1. This branch contains the chapter 3 branch. Merge `auto/BYOA-004-errors`
+   first, then this one, or squash both in order; merging this alone brings
+   chapter 3 with it.
+2. `PRICE_IN, PRICE_OUT = 5.00, 25.00` is the list price as I have it for
+   `claude-opus-5` and it is hard-coded in chapter 4 and quoted in every chapter's
+   cost section. If the price differs, every cost paragraph in chapters 1 to 4
+   is off by the same factor. The prose says the constant goes stale.
+3. The two scenarios that stop early (`cycle`, `turn_cap`) cannot use
+   `expect_tool_results`, because the final tool result is never sent to the
+   mock; they assert stdout, call count and error count instead.
+4. Still no live run for any chapter. The cycle exercise depends on a live
+   model actually repeating itself when `read_file` returns nothing; I believe
+   it will, but I could not test that here.
+
 ## 2026-09-06 — BYOA-004 Chapter 3: errors and recovery
 **Landed:** `chapters/03_errors.py` survives a tool that raises, a tool given a
 bad argument name, and a tool that hangs, by returning each failure to the model
