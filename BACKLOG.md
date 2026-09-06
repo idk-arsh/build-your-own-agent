@@ -34,11 +34,20 @@ from the published price and the token counts the chapter prints, not measured
 against a live key (no key available in the session).
 
 ### BYOA-003 — Chapter 2: tools
-**M1 · M · todo** — deps: BYOA-002
-- [ ] Tool schema by hand, dispatch table, results appended as tool-result messages
-- [ ] Two real tools: read a file, do arithmetic
-- [ ] Prose: the model emits a *request*, your code executes it — the single most misunderstood point
-- [ ] Exercise: add a third tool without touching the loop
+**M1 · M · done** — deps: BYOA-002
+- [x] Tool schema by hand, dispatch table, results appended as tool-result messages
+- [x] Two real tools: list a directory, read a file
+- [x] Prose: the model emits a *request*, your code executes it — the single most misunderstood point
+- [x] Exercise: add a third tool without touching the loop
+
+Notes: the second tool was changed from "do arithmetic" to "list a directory".
+Arithmetic is the classic toy and teaches nothing about the loop. Two filesystem
+tools make chapter 2 a small coding agent that can explore this repo, which is
+what people are building in 2026, and they set up the exercise (a search tool)
+and chapter 3 (a tool that fails). Both tools refuse paths outside the working
+directory; the prose uses that to make the "your code is the gate" point
+concrete. The harness now verifies that every `tool_use` id the mock emitted came
+back as a `tool_result` with the same id (`expect_tool_results`).
 
 ### BYOA-004 — Chapter 3: errors and recovery
 **M1 · M · todo** — deps: BYOA-003

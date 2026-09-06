@@ -48,6 +48,29 @@ def _build_script(entries: list[dict[str, Any]]) -> list[Response]:
     return script
 
 
+def _tool_use_ids(script: list[Response]) -> set[str]:
+    return {
+        block["id"]
+        for response in script
+        for block in response["content"]
+        if block["type"] == "tool_use"
+    }
+
+
+def _tool_result_ids(requests: list[dict[str, Any]]) -> set[str]:
+    ids: set[str] = set()
+    for request in requests:
+        for message in request.get("messages", []):
+            content = message.get("content")
+            if isinstance(content, list):
+                ids.update(
+                    block["tool_use_id"]
+                    for block in content
+                    if isinstance(block, dict) and block.get("type") == "tool_result"
+                )
+    return ids
+
+
 def test_chapters_directory_exists() -> None:
     assert CHAPTERS_DIR.is_dir(), "chapters/ must exist"
 
@@ -57,7 +80,7 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
     expectation_file = EXPECTATIONS_DIR / f"{chapter.stem}.json"
     assert expectation_file.is_file(), (
         f"{chapter.name} has no {expectation_file.name}. Every chapter must be "
-        f"executable by CI — add the expectation file."
+        f"executable by CI. Add the expectation file."
     )
 
     expectation = json.loads(expectation_file.read_text(encoding="utf-8"))
@@ -80,6 +103,7 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
             cwd=REPO_ROOT,
         )
         calls = server.call_count
+        requests = list(server.requests)
 
     assert completed.returncode == 0, (
         f"{chapter.name} exited {completed.returncode}\n"
@@ -95,3 +119,14 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
         assert calls == expectation["expect_calls"], (
             f"{chapter.name} made {calls} API call(s), expected {expectation['expect_calls']}"
         )
+
+    if "expect_tool_results" in expectation:
+        # The behaviour that matters from chapter 2 on: every tool_use the model
+        # emitted came back to it as a tool_result carrying the same id.
+        sent_ids = _tool_result_ids(requests)
+        asked_ids = _tool_use_ids(script)
+        assert sent_ids == asked_ids, (
+            f"{chapter.name} returned tool_result ids {sorted(sent_ids)} "
+            f"for tool_use ids {sorted(asked_ids)}"
+        )
+        assert len(sent_ids) == expectation["expect_tool_results"]

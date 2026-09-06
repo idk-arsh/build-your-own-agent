@@ -1,0 +1,17 @@
+{
+  "script": [
+    {"type": "tool_use", "id": "toolu_01", "name": "list_files", "input": {"directory": "chapters"},
+     "text": "Let me look at the repository first."},
+    {"type": "tool_use", "id": "toolu_02", "name": "read_file", "input": {"path": "chapters/01_the_loop.py"}},
+    {"type": "text", "text": "It is a conversation loop over the Messages API. Each turn appends to a list and re-sends it."}
+  ],
+  "expect_stdout": [
+    "Let me look at the repository first.",
+    "-> list_files({\"directory\": \"chapters\"})",
+    "-> read_file({\"path\": \"chapters/01_the_loop.py\"})",
+    "It is a conversation loop over the Messages API.",
+    "[6 messages |"
+  ],
+  "expect_calls": 3,
+  "expect_tool_results": 2
+}

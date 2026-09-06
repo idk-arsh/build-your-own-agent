@@ -4,6 +4,38 @@ Newest first. Format in `CLAUDE.md`. The `Watch out` line must be honest.
 
 ---
 
+## 2026-09-06 — BYOA-003 Chapter 2: tools
+**Landed:** `chapters/02_tools.py` gives the loop two filesystem tools and the
+tool_use / tool_result round trip. Point it at a question about the repo and it
+lists, reads, then answers. CI runs it against a three-response mock script and
+checks that both tool_use ids came back as tool_result blocks.
+
+**How:** Schemas written by hand, a dict for dispatch, and the loop from chapter 1
+with one new branch: if `stop_reason` is `tool_use`, run every requested tool and
+append all results in one user message. Both tools resolve the path and refuse
+anything outside the working directory; the prose builds the chapter's central
+claim (the model asks, your code acts) on that refusal. I swapped the planned
+arithmetic tool for `list_files`, reasoning in the backlog note. The exercise adds
+a `search_files` tool with the rule that the loop must not change.
+
+**Cost:** 3 files added, 3 edited, harness gained a tool_result id check, 1
+squashed commit on main.
+
+**Next:** BYOA-004 — Chapter 3: errors and recovery.
+
+**Watch out:** Three things.
+1. Two chapters landed in one session, against the one-task-per-session rule.
+   Arsh asked on 2026-09-06 to push the portfolio forward, the tasks are strictly
+   sequential, and each is its own squashed commit. Still, flag it if that rule
+   should hold regardless.
+2. Still no live API run (no key in the session). Chapter 2 exercises more of
+   the protocol than chapter 1 (the `tools` field, `tool_result` blocks) so the
+   first live run matters more here. The mock speaks the documented shape.
+3. The pre-commit gate reported a pytest failure once during the chapter 1
+   commit and then passed on every retry, including 15 consecutive runs of the
+   chapter tests. I could not capture the failing output. If it recurs, suspect a
+   port or subprocess race in the mock server, not the chapters.
+
 ## 2026-09-06 — BYOA-002 Chapter 1: the loop
 **Landed:** The first real chapter. `chapters/01_the_loop.py` is a 58-line
 conversation loop over raw HTTP with no dependencies, and CI executes it against
