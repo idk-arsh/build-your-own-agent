@@ -50,7 +50,7 @@ concrete. The harness now verifies that every `tool_use` id the mock emitted cam
 back as a `tool_result` with the same id (`expect_tool_results`).
 
 ### BYOA-004 — Chapter 3: errors and recovery
-**M1 · M · todo** — deps: BYOA-003
+**M1 · M · wip** — deps: BYOA-003
 - [ ] Tool raises, returns malformed args, times out — agent survives all three
 - [ ] Prose: error text is context; a good error message makes the model self-correct
 - [ ] Exercise: make the agent fix its own bad argument
