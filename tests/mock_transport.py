@@ -29,8 +29,14 @@ __all__ = [
 ]
 
 
-def text_response(text: str, *, stop_reason: str = "end_turn") -> Response:
-    """A plain assistant turn containing one text block."""
+def text_response(
+    text: str, *, stop_reason: str = "end_turn", usage: dict[str, int] | None = None
+) -> Response:
+    """A plain assistant turn containing one text block.
+
+    ``usage`` overrides the token counts, so a script can make a reply look
+    expensive. Chapter 4's dollar cap is tested that way.
+    """
     return {
         "id": "msg_mock_text",
         "type": "message",
@@ -38,7 +44,7 @@ def text_response(text: str, *, stop_reason: str = "end_turn") -> Response:
         "model": "mock-model",
         "content": [{"type": "text", "text": text}],
         "stop_reason": stop_reason,
-        "usage": {"input_tokens": 10, "output_tokens": len(text.split())},
+        "usage": usage or {"input_tokens": 10, "output_tokens": len(text.split())},
     }
 
 
@@ -48,6 +54,7 @@ def tool_use_response(
     *,
     tool_use_id: str = "toolu_mock",
     text: str | None = None,
+    usage: dict[str, int] | None = None,
 ) -> Response:
     """An assistant turn that requests a tool call.
 
@@ -65,7 +72,7 @@ def tool_use_response(
         "model": "mock-model",
         "content": content,
         "stop_reason": "tool_use",
-        "usage": {"input_tokens": 12, "output_tokens": 8},
+        "usage": usage or {"input_tokens": 12, "output_tokens": 8},
     }
 
 
@@ -112,12 +119,17 @@ class _Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def do_POST(self) -> None:
+        # Always consume the body first. On a keep-alive connection an unread
+        # body is parsed as the next request line, the server answers 400 and
+        # drops the connection, and the client sees a connection reset instead
+        # of the response we sent. That was an intermittent failure on Windows.
+        length = int(self.headers.get("Content-Length") or 0)
+        raw = self.rfile.read(length) if length else b"{}"
+
         if not self.path.endswith("/v1/messages"):
             self._send_json(404, {"error": {"type": "not_found", "message": self.path}})
             return
 
-        length = int(self.headers.get("Content-Length") or 0)
-        raw = self.rfile.read(length) if length else b"{}"
         try:
             body = cast(dict[str, Any], json.loads(raw or b"{}"))
         except json.JSONDecodeError as exc:

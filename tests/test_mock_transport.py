@@ -58,6 +58,20 @@ def test_tool_use_response_shape() -> None:
     }
 
 
+def test_scripted_usage_overrides_the_default_token_counts() -> None:
+    expensive = {"input_tokens": 1000, "output_tokens": 300}
+    script = [text_response("pricey", usage=expensive), tool_use_response("t", {}, usage=expensive)]
+    with mock_server(script) as server:
+        assert _post(server.base_url, {"messages": []})["usage"] == expensive
+        assert _post(server.base_url, {"messages": []})["usage"] == expensive
+
+
+def test_default_usage_is_present_when_not_scripted() -> None:
+    with mock_server([text_response("two words")]) as server:
+        usage = _post(server.base_url, {"messages": []})["usage"]
+    assert usage == {"input_tokens": 10, "output_tokens": 2}
+
+
 def test_exhausted_script_is_a_loud_error_not_a_silent_loop() -> None:
     with mock_server([text_response("only one")]) as server:
         _post(server.base_url, {"messages": []})

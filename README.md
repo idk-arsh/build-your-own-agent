@@ -12,7 +12,7 @@ running, and still cannot say why their agent loops forever or spent $4 on one
 request. The loop is smaller than it looks. The first working version is 58
 lines, and 20 of those are the HTTP request.
 
-> **Status: in progress.** Chapters 1 and 2 are done. Chapters are written in
+> **Status: in progress.** Chapters 1 to 4 are done. Chapters are written in
 > order, one at a time. [`ROADMAP.md`](ROADMAP.md) has the plan,
 > [`BACKLOG.md`](BACKLOG.md) has what is being worked on now.
 
@@ -22,9 +22,9 @@ lines, and 20 of those are the HTTP request.
 |---|---|---|---|
 | 1 | [The loop](chapters/01_the_loop.md) | An agent is a message list and a loop. The API has no memory; you keep the list. | done |
 | 2 | [Tools](chapters/02_tools.md) | The model asks, your code acts. Schemas by hand, a dispatch table, the tool_result round trip. | done |
-| 3 | Errors and recovery | Tools that raise, return garbage, or hang. Error text is context the model can act on. | next |
-| 4 | Loop control and cost | Turn caps, dollar caps, cycle detection. Why agents repeat themselves. | |
-| 5 | Memory | Truncation, then summarisation. The arithmetic of why naive history is unaffordable. | |
+| 3 | [Errors and recovery](chapters/03_errors.md) | Tools that raise, return garbage, or hang. Error text is context the model can act on. | done |
+| 4 | [Loop control and cost](chapters/04_loop_control.md) | Turn caps, dollar caps, cycle detection. Why agents repeat themselves. | done |
+| 5 | Memory | Truncation, then summarisation. The arithmetic of why naive history is unaffordable. | next |
 | 6 | Retrieval | Embeddings and cosine similarity in plain Python. When you need a vector database (later than you think). | |
 | 7 | Planning | Decompose, then execute. Plan-first versus act-as-you-go, and when each wins. | |
 | 8 | Subagents | Delegation, context isolation, collecting results. | |

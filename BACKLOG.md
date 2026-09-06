@@ -50,16 +50,41 @@ concrete. The harness now verifies that every `tool_use` id the mock emitted cam
 back as a `tool_result` with the same id (`expect_tool_results`).
 
 ### BYOA-004 — Chapter 3: errors and recovery
-**M1 · M · todo** — deps: BYOA-003
-- [ ] Tool raises, returns malformed args, times out — agent survives all three
-- [ ] Prose: error text is context; a good error message makes the model self-correct
-- [ ] Exercise: make the agent fix its own bad argument
+**M1 · M · done** — deps: BYOA-003
+- [x] Tool raises, returns malformed args, times out — agent survives all three
+- [x] Prose: error text is context; a good error message makes the model self-correct
+- [x] Exercise: make the agent fix its own bad argument
+
+Notes: 175 lines, stdlib only. The third tool is `run_python` (a subprocess with
+a timeout) rather than a tool that exists only to hang: the subprocess is the one
+place a hung tool can actually be killed, and the prose makes that the lesson.
+The tools no longer pre-check for failure; they raise and one `run_tool()` catches
+everything, returning `tool_result` with `is_error: true`. Refusals raise
+`PermissionError` so a model cannot mistake one for file contents. The mock is
+unchanged; the harness gained an optional `env` field per expectation (the test
+sets `TOOL_TIMEOUT=1` so the scripted infinite loop dies in a second instead of
+ten) and `expect_tool_errors`, which counts the results flagged `is_error`. The
+scripted run exercises all three failures; the nonzero-exit, refusal and
+unknown-tool paths were verified by hand, not in CI.
 
 ### BYOA-005 — Chapter 4: loop control and cost
-**M1 · M · todo** — deps: BYOA-004
-- [ ] Turn cap, USD cap, cycle detection on repeated tool+args
-- [ ] Prose: why agents loop, with a real transcript of one doing it
-- [ ] Exercise: trigger the cycle detector deliberately
+**M1 · M · done** — deps: BYOA-004
+- [x] Turn cap, USD cap, cycle detection on repeated tool+args
+- [x] Prose: why agents loop, with a real transcript of one doing it
+- [x] Exercise: trigger the cycle detector deliberately
+
+Notes: 185 lines, stdlib only, chapter 3's two file tools (`run_python` left out
+for length). The dollar cap is computed from each reply's `usage` and two price
+constants, checked after every reply and before any tool runs. The cycle detector
+keys a `Counter` on tool name plus `json.dumps(input, sort_keys=True)`; the first
+repeat is answered with an `is_error` nudge instead of re-running the tool, the
+second repeat ends the run. The mock gained an optional `usage` override on both
+response builders (tested in `test_mock_transport.py`) so a scripted reply can
+look expensive, and the harness now accepts a list of named scenarios per
+chapter; chapter 4 has four (finishes, cycle, usd_cap, turn_cap). All four
+transcripts in the prose are real mock runs. Also fixed while here: the mock's
+unknown-path branch answered before reading the request body, which produced the
+intermittent `ConnectionAbortedError` noted in the BYOA-002 digest.
 
 ### BYOA-006 — Chapter 5: memory
 **M2 · M · todo** — deps: BYOA-005

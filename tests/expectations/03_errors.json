@@ -1,0 +1,31 @@
+{
+  "env": {"TOOL_TIMEOUT": "1"},
+  "script": [
+    {"type": "tool_use", "id": "toolu_01", "name": "read_file", "input": {"file": "chapters/03_errors.py"},
+     "text": "I will read the file first."},
+    {"type": "tool_use", "id": "toolu_02", "name": "read_file", "input": {"path": "chapters/03_error.py"}},
+    {"type": "tool_use", "id": "toolu_03", "name": "list_files", "input": {"directory": "chapters"}},
+    {"type": "tool_use", "id": "toolu_04", "name": "run_python",
+     "input": {"code": "count = 0\nwith open('chapters/03_errors.py') as f:\n    line = f.readline()\n    while line:\n        count += 1\nprint(count)"},
+     "text": "The file is 03_errors.py. Counting its lines."},
+    {"type": "tool_use", "id": "toolu_05", "name": "run_python",
+     "input": {"code": "with open('chapters/03_errors.py') as f:\n    print(sum(1 for _ in f))"},
+     "text": "That loop never advanced. Simpler:"},
+    {"type": "text", "text": "chapters/03_errors.py is 175 lines long."}
+  ],
+  "expect_stdout": [
+    "I will read the file first.",
+    "-> read_file({\"file\": \"chapters/03_errors.py\"})",
+    "   error: TypeError: read_file() got an unexpected keyword argument 'file'",
+    "-> read_file({\"path\": \"chapters/03_error.py\"})",
+    "   error: FileNotFoundError: [Errno 2] No such file or directory: 'chapters/03_error.py'",
+    "-> list_files({\"directory\": \"chapters\"})",
+    "   error: TimeoutError: killed after 1 seconds with no result. Does the code terminate?",
+    "That loop never advanced. Simpler:",
+    "chapters/03_errors.py is 175 lines long.",
+    "[12 messages |"
+  ],
+  "expect_calls": 6,
+  "expect_tool_results": 5,
+  "expect_tool_errors": 3
+}

@@ -27,13 +27,38 @@ EXPECTATIONS_DIR = Path(__file__).resolve().parent / "expectations"
 CHAPTERS = sorted(CHAPTERS_DIR.glob("[0-9][0-9]_*.py"))
 
 
+def _scenarios(chapter: Path) -> list[dict[str, Any]]:
+    """An expectation file is one scenario (a dict) or several (a list of dicts).
+
+    A missing file yields one empty scenario so the test below can fail with
+    the "add the expectation file" message rather than at collection time.
+    """
+    expectation_file = EXPECTATIONS_DIR / f"{chapter.stem}.json"
+    if not expectation_file.is_file():
+        return [{}]
+    loaded = json.loads(expectation_file.read_text(encoding="utf-8"))
+    scenarios: list[dict[str, Any]] = loaded if isinstance(loaded, list) else [loaded]
+    return scenarios
+
+
+def _cases() -> list[Any]:
+    cases = []
+    for chapter in CHAPTERS:
+        for scenario in _scenarios(chapter):
+            suffix = f"[{scenario['name']}]" if "name" in scenario else ""
+            cases.append(pytest.param(chapter, scenario, id=f"{chapter.stem}{suffix}"))
+    return cases
+
+
 def _build_script(entries: list[dict[str, Any]]) -> list[Response]:
     script: list[Response] = []
     for entry in entries:
         kind = entry.get("type")
         if kind == "text":
             stop_reason = entry.get("stop_reason", "end_turn")
-            script.append(text_response(entry["text"], stop_reason=stop_reason))
+            script.append(
+                text_response(entry["text"], stop_reason=stop_reason, usage=entry.get("usage"))
+            )
         elif kind == "tool_use":
             script.append(
                 tool_use_response(
@@ -41,6 +66,7 @@ def _build_script(entries: list[dict[str, Any]]) -> list[Response]:
                     entry.get("input", {}),
                     tool_use_id=entry.get("id", "toolu_mock"),
                     text=entry.get("text"),
+                    usage=entry.get("usage"),
                 )
             )
         else:
@@ -57,7 +83,8 @@ def _tool_use_ids(script: list[Response]) -> set[str]:
     }
 
 
-def _tool_result_ids(requests: list[dict[str, Any]]) -> set[str]:
+def _tool_result_ids(requests: list[dict[str, Any]], *, errors_only: bool = False) -> set[str]:
+    """Every tool_use id the chapter answered; with errors_only, just those it flagged is_error."""
     ids: set[str] = set()
     for request in requests:
         for message in request.get("messages", []):
@@ -66,7 +93,9 @@ def _tool_result_ids(requests: list[dict[str, Any]]) -> set[str]:
                 ids.update(
                     block["tool_use_id"]
                     for block in content
-                    if isinstance(block, dict) and block.get("type") == "tool_result"
+                    if isinstance(block, dict)
+                    and block.get("type") == "tool_result"
+                    and (not errors_only or block.get("is_error") is True)
                 )
     return ids
 
@@ -75,15 +104,14 @@ def test_chapters_directory_exists() -> None:
     assert CHAPTERS_DIR.is_dir(), "chapters/ must exist"
 
 
-@pytest.mark.parametrize("chapter", CHAPTERS, ids=lambda p: p.stem)
-def test_chapter_runs_against_mock(chapter: Path) -> None:
+@pytest.mark.parametrize(("chapter", "expectation"), _cases())
+def test_chapter_runs_against_mock(chapter: Path, expectation: dict[str, Any]) -> None:
     expectation_file = EXPECTATIONS_DIR / f"{chapter.stem}.json"
     assert expectation_file.is_file(), (
         f"{chapter.name} has no {expectation_file.name}. Every chapter must be "
         f"executable by CI. Add the expectation file."
     )
 
-    expectation = json.loads(expectation_file.read_text(encoding="utf-8"))
     script = _build_script(expectation["script"])
 
     with mock_server(script) as server:
@@ -92,6 +120,9 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
             "ANTHROPIC_BASE_URL": server.base_url,
             "ANTHROPIC_API_KEY": "mock-key-not-real",
             "PYTHONIOENCODING": "utf-8",
+            # A chapter's own knobs (timeouts, caps) can be set per expectation
+            # so CI stays fast and deterministic without touching the chapter.
+            **expectation.get("env", {}),
         }
         completed = subprocess.run(
             [sys.executable, str(chapter)],
@@ -130,3 +161,12 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
             f"for tool_use ids {sorted(asked_ids)}"
         )
         assert len(sent_ids) == expectation["expect_tool_results"]
+
+    if "expect_tool_errors" in expectation:
+        # From chapter 3 on: a failed tool call still comes back as a tool_result,
+        # and it is flagged is_error so the model knows not to trust the content.
+        error_ids = _tool_result_ids(requests, errors_only=True)
+        assert len(error_ids) == expectation["expect_tool_errors"], (
+            f"{chapter.name} flagged {sorted(error_ids)} as errors, "
+            f"expected {expectation['expect_tool_errors']} of them"
+        )
