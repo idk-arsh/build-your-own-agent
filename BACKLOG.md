@@ -50,10 +50,22 @@ concrete. The harness now verifies that every `tool_use` id the mock emitted cam
 back as a `tool_result` with the same id (`expect_tool_results`).
 
 ### BYOA-004 — Chapter 3: errors and recovery
-**M1 · M · wip** — deps: BYOA-003
-- [ ] Tool raises, returns malformed args, times out — agent survives all three
-- [ ] Prose: error text is context; a good error message makes the model self-correct
-- [ ] Exercise: make the agent fix its own bad argument
+**M1 · M · done** — deps: BYOA-003
+- [x] Tool raises, returns malformed args, times out — agent survives all three
+- [x] Prose: error text is context; a good error message makes the model self-correct
+- [x] Exercise: make the agent fix its own bad argument
+
+Notes: 175 lines, stdlib only. The third tool is `run_python` (a subprocess with
+a timeout) rather than a tool that exists only to hang: the subprocess is the one
+place a hung tool can actually be killed, and the prose makes that the lesson.
+The tools no longer pre-check for failure; they raise and one `run_tool()` catches
+everything, returning `tool_result` with `is_error: true`. Refusals raise
+`PermissionError` so a model cannot mistake one for file contents. The mock is
+unchanged; the harness gained an optional `env` field per expectation (the test
+sets `TOOL_TIMEOUT=1` so the scripted infinite loop dies in a second instead of
+ten) and `expect_tool_errors`, which counts the results flagged `is_error`. The
+scripted run exercises all three failures; the nonzero-exit, refusal and
+unknown-tool paths were verified by hand, not in CI.
 
 ### BYOA-005 — Chapter 4: loop control and cost
 **M1 · M · todo** — deps: BYOA-004

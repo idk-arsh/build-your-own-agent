@@ -4,6 +4,47 @@ Newest first. Format in `CLAUDE.md`. The `Watch out` line must be honest.
 
 ---
 
+## 2026-09-06 — BYOA-004 Chapter 3: errors and recovery
+**Landed:** `chapters/03_errors.py` survives a tool that raises, a tool given a
+bad argument name, and a tool that hangs, by returning each failure to the model
+as a `tool_result` with `is_error: true`. CI runs a six-call script in which the
+mock makes all three mistakes and recovers from each.
+
+**How:** One `run_tool()` that never raises: unknown tool, `TypeError` from
+`**arguments`, and anything the tool throws all become `ClassName: message` in
+an error-flagged result. The tools stopped pre-checking (chapter 2's `refused:`
+strings) and now raise, including the working-directory refusal, which is a
+`PermissionError` so the model cannot read it as file contents. The third tool is
+`run_python`, a subprocess with `timeout=`, chosen over a tool that exists only to
+hang because a subprocess is the one thing Python can kill; the prose turns that
+into the rule "put the timeout where the work can be stopped". `read_file` opens
+by the model's own string so the error quotes it back unchanged on every OS.
+Harness: an `env` field per expectation (`TOOL_TIMEOUT=1` keeps the suite at
+about 10 s total) and `expect_tool_errors`. The transcript in the prose is a real
+run with the default 10 s timeout.
+
+**Cost:** 3 files added, 3 edited (harness, README table, backlog), 1 test added
+via the expectation file, 2 commits on `auto/BYOA-004-errors` (wip marker plus
+the feature). Not merged; the coordinator merges.
+
+**Next:** BYOA-005 — Chapter 4: loop control and cost.
+
+**Watch out:** Four things.
+1. `run_python` executes model-written code with no sandbox. The prose says so
+   plainly and tells readers not to run it live in an uncommitted directory. If
+   that is too sharp a tool for chapter 3, the alternative is a `sleep` tool,
+   which teaches less. Your call.
+2. The scripted run covers the three required failures. The nonzero-exit path of
+   `run_python`, the refusal, the unknown-tool message and a wrong argument type
+   were verified by hand in this session (all came back `is_error: true`) but no
+   CI assertion covers them.
+3. `make` is not installed on this machine, so the gate was run as the four
+   commands `.githooks/pre-commit` runs (ruff check, ruff format --check, mypy,
+   pytest). Same commands, same tooling, green each time. The hook also ran them
+   at every commit.
+4. Still no live API run for any chapter. Chapter 3 adds `is_error` to the
+   protocol surface, which the mock accepts but does not validate.
+
 ## 2026-09-06 — BYOA-003 Chapter 2: tools
 **Landed:** `chapters/02_tools.py` gives the loop two filesystem tools and the
 tool_use / tool_result round trip. Point it at a question about the repo and it

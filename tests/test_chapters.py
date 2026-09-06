@@ -57,7 +57,8 @@ def _tool_use_ids(script: list[Response]) -> set[str]:
     }
 
 
-def _tool_result_ids(requests: list[dict[str, Any]]) -> set[str]:
+def _tool_result_ids(requests: list[dict[str, Any]], *, errors_only: bool = False) -> set[str]:
+    """Every tool_use id the chapter answered; with errors_only, just those it flagged is_error."""
     ids: set[str] = set()
     for request in requests:
         for message in request.get("messages", []):
@@ -66,7 +67,9 @@ def _tool_result_ids(requests: list[dict[str, Any]]) -> set[str]:
                 ids.update(
                     block["tool_use_id"]
                     for block in content
-                    if isinstance(block, dict) and block.get("type") == "tool_result"
+                    if isinstance(block, dict)
+                    and block.get("type") == "tool_result"
+                    and (not errors_only or block.get("is_error") is True)
                 )
     return ids
 
@@ -92,6 +95,9 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
             "ANTHROPIC_BASE_URL": server.base_url,
             "ANTHROPIC_API_KEY": "mock-key-not-real",
             "PYTHONIOENCODING": "utf-8",
+            # A chapter's own knobs (timeouts, caps) can be set per expectation
+            # so CI stays fast and deterministic without touching the chapter.
+            **expectation.get("env", {}),
         }
         completed = subprocess.run(
             [sys.executable, str(chapter)],
@@ -130,3 +136,12 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
             f"for tool_use ids {sorted(asked_ids)}"
         )
         assert len(sent_ids) == expectation["expect_tool_results"]
+
+    if "expect_tool_errors" in expectation:
+        # From chapter 3 on: a failed tool call still comes back as a tool_result,
+        # and it is flagged is_error so the model knows not to trust the content.
+        error_ids = _tool_result_ids(requests, errors_only=True)
+        assert len(error_ids) == expectation["expect_tool_errors"], (
+            f"{chapter.name} flagged {sorted(error_ids)} as errors, "
+            f"expected {expectation['expect_tool_errors']} of them"
+        )
