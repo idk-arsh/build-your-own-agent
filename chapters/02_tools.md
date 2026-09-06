@@ -1,6 +1,6 @@
 # Chapter 2: tools
 
-**Code:** [`02_tools.py`](02_tools.py), about 125 lines, no dependencies.
+**Code:** [`02_tools.py`](02_tools.py), 125 lines, no dependencies.
 **Run:** `ANTHROPIC_API_KEY=sk-... python chapters/02_tools.py "what is in the tests directory?"`
 **Cost:** a three-call run like the one below is under 5 cents. Details at the bottom.
 

@@ -3,7 +3,7 @@
 **Build a production-capable AI agent from scratch in 12 chapters. No frameworks.**
 
 Every chapter is a runnable Python file under 200 lines, a written explanation of
-*why*, and an exercise. By chapter 12 the reader has written — by hand — an agent
+*why*, and an exercise. By chapter 12 the reader has written, by hand, an agent
 with tool use, memory, planning, retrieval, MCP support, and a web UI.
 
 ## Why this exists
@@ -11,16 +11,16 @@ with tool use, memory, planning, retrieval, MCP support, and a web UI.
 Agent frameworks hide the thing worth understanding. People `pip install` a
 framework, get a working demo, and still cannot answer why their agent loops
 forever or burns $4 on one request. The fastest way to actually understand agents
-is to write the loop yourself, and the loop is smaller than people think — the
-first working version is about 40 lines.
+is to write the loop yourself, and the loop is smaller than people think. The
+first working version is 58 lines.
 
 Precedent: `nanochat` proved that a well-written from-scratch teaching repo
 outperforms most tools on reach. The from-scratch genre works because forking is
-the usage — you fork it to work through it.
+the usage: you fork it to work through it.
 
 ## Chapters
 
-1. **The loop.** 40 lines: message list, API call, print. Why an agent is a while-loop.
+1. **The loop.** 58 lines: message list, API call, print. Why an agent is a while-loop.
 2. **Tools.** Tool schemas, dispatch, feeding results back. Why the model can't call anything itself.
 3. **Errors.** Tool failures, malformed args, retries. The agent that recovers vs. the one that dies.
 4. **Loop control.** Turn limits, cost limits, cycle detection. Why your agent repeats itself.
@@ -37,7 +37,7 @@ the usage — you fork it to work through it.
 
 - **Chapter N runs standalone.** No shared library the reader must read first.
 - **Under 200 lines per chapter.** If it doesn't fit, the chapter is doing too much.
-- **Stdlib + one HTTP client.** No LangChain, no framework, ever. That's the whole point.
+- **Standard library only.** `urllib` for HTTP. No framework, ever. That is the whole point.
 - **Every chapter runs.** CI executes all 12 against a mock transport on every push.
 - **Prose explains why.** Code shows what. A chapter without prose is not done.
 - **Costs are stated.** Every chapter says what it costs to run against a real API.
