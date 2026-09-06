@@ -22,11 +22,16 @@ soon as the first chapter lands. The chapter-runner harness is self-tested but h
 not yet executed a real chapter — that happens in BYOA-002.
 
 ### BYOA-002 — Chapter 1: the loop
-**M1 · M · todo** — deps: BYOA-001
-- [ ] `chapters/01_the_loop.py` under 60 lines, runs against a real API key or the mock
-- [ ] Prose: why an agent is a while-loop; what the message list actually is
-- [ ] Exercise: make it stop when the model says "done" — no library
-- [ ] Stated cost to run: real number
+**M1 · M · done** — deps: BYOA-001
+- [x] `chapters/01_the_loop.py` under 60 lines, runs against a real API key or the mock
+- [x] Prose: why an agent is a while-loop; what the message list actually is
+- [x] Exercise: make it stop when the model says "done" — no library
+- [x] Stated cost to run: real number
+
+Notes: 58 lines, stdlib only (`urllib`). The harness gained a `stdin` field in the
+expectation file so interactive chapters can be driven in CI. Cost is computed
+from the published price and the token counts the chapter prints, not measured
+against a live key (no key available in the session).
 
 ### BYOA-003 — Chapter 2: tools
 **M1 · M · todo** — deps: BYOA-002

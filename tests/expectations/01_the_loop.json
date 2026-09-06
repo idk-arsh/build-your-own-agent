@@ -1,0 +1,14 @@
+{
+  "stdin": "hello\nwhat did I just say?\n",
+  "script": [
+    {"type": "text", "text": "Hello. What can I do for you?"},
+    {"type": "text", "text": "You said hello."}
+  ],
+  "expect_stdout": [
+    "Hello. What can I do for you?",
+    "You said hello.",
+    "[2 messages |",
+    "[4 messages |"
+  ],
+  "expect_calls": 2
+}

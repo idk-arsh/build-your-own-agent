@@ -2,8 +2,9 @@
 
 Acceptance rule for the whole repo: a chapter that CI cannot run is not done.
 Each ``chapters/NN_name.py`` needs a matching ``tests/expectations/NN_name.json``
-declaring the scripted API responses and what the chapter must print. A chapter
-without one fails here deliberately — that is what stops chapters rotting.
+declaring the scripted API responses, what to feed the chapter on stdin, and
+what it must print. A chapter without one fails here deliberately. That is what
+stops chapters rotting.
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ def test_chapter_runs_against_mock(chapter: Path) -> None:
         }
         completed = subprocess.run(
             [sys.executable, str(chapter)],
+            input=expectation.get("stdin", ""),
             capture_output=True,
             text=True,
             timeout=60,
