@@ -3,7 +3,8 @@
 Each chapter's `_inside_root()` is the one line standing between the model and
 the rest of the disk. This test drives it with the paths a confused or
 prompt-injected model would send: traversal, absolute paths, Windows drive
-letters and backslashes, a sibling directory whose name merely starts with the
+letters and backslashes (on Windows only, since POSIX treats those as plain
+filename characters), a sibling directory whose name merely starts with the
 working directory's, and a symlink (or junction) inside the repository that
 points outside it.
 """
@@ -68,21 +69,28 @@ def outside(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def _hostile_paths(outside: Path) -> list[str]:
     root = str(REPO_ROOT)
-    return [
+    paths = [
         "..",
         "../..",
         "chapters/../../secret.txt",
-        "..\\secret.txt",
         str(outside),
         str(outside / "secret.txt"),
         root + "2",  # /work vs /work2: a prefix match is not containment
         root + "2/secret.txt",
         "/etc/passwd",
-        "\\etc\\passwd",
-        "C:\\Windows\\win.ini",
-        "C:/Windows/win.ini",
-        "\\\\localhost\\c$\\Windows\\win.ini",
     ]
+    if os.name == "nt":
+        # On POSIX a backslash is an ordinary filename character and `C:` is a
+        # plain directory name, so these resolve inside the root there and must
+        # not be refused. Only Windows reads them as separators and drives.
+        paths += [
+            "..\\secret.txt",
+            "\\etc\\passwd",
+            "C:\\Windows\\win.ini",
+            "C:/Windows/win.ini",
+            "\\\\localhost\\c$\\Windows\\win.ini",
+        ]
+    return paths
 
 
 @pytest.mark.parametrize("stem", GUARDED)
