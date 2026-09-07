@@ -1,6 +1,6 @@
 """A deterministic fake of the Anthropic Messages API.
 
-Chapters must run standalone — no imports from this repository — so the mock
+Chapters must run standalone, with no imports from this repository, so the mock
 cannot be a library the chapters call. Instead it is a real HTTP server that
 speaks the Messages API, and chapters honour ``ANTHROPIC_BASE_URL``. Point that
 at the mock and a chapter runs unchanged, with no API key and no network.
@@ -58,7 +58,7 @@ def tool_use_response(
 ) -> Response:
     """An assistant turn that requests a tool call.
 
-    The model never executes anything itself — it emits this request and your
+    The model never executes anything itself. It emits this request and your
     code decides what to do with it. Chapter 2 exists to make that concrete.
     """
     content: list[Block] = []
@@ -127,23 +127,36 @@ class _Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
 
         if not self.path.endswith("/v1/messages"):
-            self._send_json(404, {"error": {"type": "not_found", "message": self.path}})
+            self._send_error(404, "not_found_error", f"{self.path} is not a Messages API path")
             return
 
         try:
             body = cast(dict[str, Any], json.loads(raw or b"{}"))
         except json.JSONDecodeError as exc:
-            self._send_json(400, {"error": {"type": "invalid_request_error", "message": str(exc)}})
+            self._send_error(400, "invalid_request_error", f"body is not JSON: {exc}")
             return
 
         server = cast(MockServer, self.server)
         try:
             payload = server.next_response(body)
         except IndexError as exc:
-            self._send_json(500, {"error": {"type": "mock_exhausted", "message": str(exc)}})
+            # The real API's own type for a server-side failure. A chapter that
+            # inspects errors sees the same envelope it would see live.
+            self._send_error(500, "api_error", str(exc))
             return
 
         self._send_json(200, payload)
+
+    def _send_error(self, status: int, error_type: str, message: str) -> None:
+        """The documented error envelope: top-level type, nested error, request_id."""
+        self._send_json(
+            status,
+            {
+                "type": "error",
+                "error": {"type": error_type, "message": message},
+                "request_id": "req_mock",
+            },
+        )
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload).encode()

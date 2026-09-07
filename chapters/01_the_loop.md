@@ -44,7 +44,7 @@ else you append to it.
 | Field | What it is |
 |---|---|
 | `model` | Which model answers. Read from `MODEL` so you can switch without editing code. |
-| `max_tokens` | Hard ceiling on the reply length. The model does not know about it; it just gets cut off. |
+| `max_tokens` | Hard ceiling on the reply length. The model does not know about it; it just gets cut off. Thinking counts against it too, so leave room. |
 | `messages` | The list. Alternating `user` and `assistant`, starting with `user`. |
 
 Three headers: the content type, your key, and an API version date. That is the

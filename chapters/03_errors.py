@@ -112,7 +112,7 @@ TOOLS: dict[str, Callable[..., str]] = {
 
 
 def call_model(messages: list[Message]) -> dict[str, Any]:
-    body = {"model": MODEL, "max_tokens": 4096, "tools": TOOL_SCHEMAS, "messages": messages}
+    body = {"model": MODEL, "max_tokens": 16000, "tools": TOOL_SCHEMAS, "messages": messages}
     request = urllib.request.Request(
         f"{BASE_URL}/v1/messages",
         data=json.dumps(body).encode(),

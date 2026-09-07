@@ -14,7 +14,7 @@ support, streaming, evaluation and a web UI.
 Frameworks hide the part worth understanding. People install one, get a demo
 running, and still cannot say why their agent loops forever or spent $4 on one
 request. The loop is smaller than it looks. The first working version is 58
-lines, and 20 of those are the HTTP request.
+lines, and 15 of those are the HTTP request.
 
 > **Status: in progress.** Chapters 1 to 4 are done. Chapters are written in
 > order, one at a time. [`ROADMAP.md`](ROADMAP.md) has the plan,

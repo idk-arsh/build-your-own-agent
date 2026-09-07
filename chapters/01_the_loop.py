@@ -1,7 +1,7 @@
 """Chapter 1: the loop. Prose in 01_the_loop.md.
 
 An agent is a list of messages and a loop that keeps appending to it. That is
-the whole idea. Every later chapter is a refinement of these 50 lines.
+the whole idea. Every later chapter is a refinement of these 58 lines.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ Message = dict[str, Any]
 
 def call_model(messages: list[Message]) -> dict[str, Any]:
     """One HTTP request. The model sees exactly the list you send, nothing else."""
-    body = {"model": MODEL, "max_tokens": 4096, "messages": messages}
+    body = {"model": MODEL, "max_tokens": 16000, "messages": messages}
     request = urllib.request.Request(
         f"{BASE_URL}/v1/messages",
         data=json.dumps(body).encode(),

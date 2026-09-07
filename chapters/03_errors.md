@@ -142,9 +142,9 @@ Same prices as before: $5 per million input tokens, $25 per million output.
 
 Six calls. The three tool schemas go out on every one of them, about 250 tokens
 a time, and the history grows from roughly 300 tokens on the first call to about
-700 on the last. Call it 3,000 input tokens in total, plus about 200 output
+700 on the last. Call it 4,500 input tokens in total, plus about 200 output
 tokens across the six replies, plus whatever the model thinks. That is a bit
-under 2 cents before thinking and under 5 with it.
+over 2 cents before thinking and under 5 with it.
 
 The number to notice: the three failed calls cost the same as the three
 successful ones. A failure is not free because nothing happened. The request

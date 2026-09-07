@@ -4,6 +4,44 @@ Newest first. Format in `CLAUDE.md`. The `Watch out` line must be honest.
 
 ---
 
+## 2026-09-07 — AUDIT bugs, API contract, flake root cause
+**Landed:** `max_tokens` raised from 4096 to 16000 in all four chapters; the
+mock's error responses now use the documented envelope; two regression tests
+and a path-guard test suite added. Chapter line counts are unchanged.
+
+**How:** Full audit of chapters 1 to 4, mock, harness, prose and README against
+the live Messages API docs. On `claude-opus-5` thinking is on by default and
+thinking tokens count toward `max_tokens`, so at 4096 a repo-exploration turn
+can end with `stop_reason: max_tokens`, a thinking block and no text; chapters 2
+to 4 would then exit with no answer. 16000 is the documented non-streaming
+default and changes no line. The mock's errors lacked the top-level
+`"type": "error"` and used invented type strings (`not_found`, `mock_exhausted`);
+they now send `not_found_error`, `invalid_request_error`, `api_error` with a
+`request_id`. The BYOA-005 flake diagnosis was verified by reproduction: the old
+answer-before-reading-the-body handler produced `ConnectionAbortedError` in 7 to
+15 of 300 requests on Windows, the current one in 0 of 600, and 20 of 20 full
+suite runs pass. The path guard held against traversal, absolute paths, drive
+letters, backslashes, UNC, a `/work` vs `/work2` sibling and a junction pointing
+outside the repo; `tests/test_path_guard.py` locks that in for chapters 2 to 4.
+Prose: README's "20 of those are the HTTP request" is 15; chapter 3's cost
+paragraph summed to 4,500 input tokens, not 3,000; chapter 1's docstring said 50
+lines. Full report at `~/dev/reports/audit-build-your-own-agent.md`.
+
+**Cost:** 9 files edited, 1 test file added, 11 tests added, 1 commit (audit
+session; fixes reviewed and committed in one go).
+
+**Next:** BYOA-006 — Chapter 5: memory, once this is committed or discarded.
+
+**Watch out:** Three things.
+1. Nothing here was run against the live API either. The `max_tokens` change is
+   grounded in the docs, not a live reproduction.
+2. Empty tool results (`run_python` with no output, the chapter 4 exercise that
+   returns "") send `"content": ""`. The docs mark `content` optional and do not
+   forbid an empty string, but this is unverified live.
+3. The chapters still crash with a traceback on 429, 529 or a network error.
+   That is a design gap (chapter 3 is about tool errors, not transport errors),
+   not a bug, and it is listed in the report rather than changed.
+
 ## 2026-09-06 — BYOA-005 Chapter 4: loop control and cost
 **Landed:** `chapters/04_loop_control.py` stops for three reasons the model does
 not control: a turn cap, a dollar cap computed from `usage` and the list price,
